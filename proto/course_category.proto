@@ -1,0 +1,40 @@
+syntax = "proto3";
+option java_multiple_files = true;
+option java_package = "io.grpc.proto.courseCategory";
+option java_outer_classname = "CourseCategoryProto";
+option objc_class_prefix = "HLW";
+
+package courseCategory;
+
+message Blank {}
+
+message Category {
+    string id = 1;
+    string name = 2;
+    string description = 3;
+}
+
+message CreateCategoryRequest {
+    string name = 1;
+    string description = 2;
+}
+
+message CategoryResponse {
+    Category category = 1;
+}
+
+message CategoryList {
+    repeated Category categories = 1;
+}
+
+message CategoryGetRequest {
+    string id = 1;
+}
+
+service CategoryService {
+    rpc CreateCategory(CreateCategoryRequest) returns (CategoryResponse) {}
+    rpc CreateCategoryStream(stream CreateCategoryRequest) returns (CategoryList) {}
+    rpc CreateCategoryStreamBidirectional(stream CreateCategoryRequest) returns (stream Category) {}
+    rpc ListCategory(Blank) returns (CategoryList) {}
+    rpc GetCategory(CategoryGetRequest) returns (CategoryResponse) {}
+}
