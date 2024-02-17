@@ -22,7 +22,8 @@ async function bootstrap() {
         listCategory: categoryService.listCategory,
         createCategory: categoryService.createCategory,
         getCategory: categoryService.getCategory,
-        createCategoryStream: categoryService.createCategoryStream
+        createCategoryStream: categoryService.createCategoryStream,
+        createCategoryStreamBidirectional: categoryService.createCategoryStreamBidirectional
     })
     server.bindAsync(
         '0.0.0.0:50051', 

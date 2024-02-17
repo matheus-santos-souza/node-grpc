@@ -1,4 +1,4 @@
-import { ServerUnaryCall, ServerReadableStream, sendUnaryData, status } from "@grpc/grpc-js"
+import { ServerUnaryCall, ServerReadableStream, ServerDuplexStream, sendUnaryData, status } from "@grpc/grpc-js"
 import { randomUUID } from "node:crypto"
 import { Blank } from "proto/courseCategory/Blank"
 import { CategoryList__Output } from "proto/courseCategory/CategoryList"
@@ -8,7 +8,7 @@ import validationRequired from "src/constants/validantion-required.constant"
 import { CategoryResponse__Output } from "proto/courseCategory/CategoryResponse"
 import { CategoryGetRequest } from "proto/courseCategory/CategoryGetRequest"
 import { CreateCategoryRequest } from "proto/courseCategory/CreateCategoryRequest"
-import { Category, Category__Output } from "proto/courseCategory/Category"
+import { Category__Output } from "proto/courseCategory/Category"
 
 export default class CategoryService {
 
@@ -123,5 +123,31 @@ export default class CategoryService {
             callback(null, categoryList);
         });
 
+    }
+
+    async createCategoryStreamBidirectional(
+        call: ServerDuplexStream<CreateCategoryRequest, CreateCategoryRequest>
+    ) {
+        call.on('data', async (request: Category__Output) => {
+            const category = await prisma.category.upsert({
+                where: {
+                    name: request.name
+                },
+                update: {
+                    description: request.description
+                },
+                create: {
+                    id: randomUUID(),
+                    name: request.name,
+                    description: request.description
+                }
+            })
+            call.write(category);
+            call.resume();
+        });
+          
+        call.on('end', async () => {
+            call.end()
+        });
     }
 }
