@@ -6,15 +6,21 @@
   "scripts": {
     "start:client": "npx tsx watch src/client.ts",
     "start": "npx tsx watch src/server.ts",
+    "protoc": "npx proto-loader-gen-types --longs=String --enums=String --defaults --oneofs --grpcLib=@grpc/grpc-js --outDir=proto/ proto/*.proto",
     "build": "npx tsc"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@grpc/grpc-js": "^1.10.0"
+    "@grpc/grpc-js": "^1.10.0",
+    "@grpc/proto-loader": "^0.7.10",
+    "@grpc/reflection": "^1.0.1",
+    "@prisma/client": "^5.9.1"
   },
   "devDependencies": {
+    "@types/node": "^20.11.19",
+    "prisma": "^5.9.1",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3"
   }

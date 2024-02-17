@@ -7,7 +7,14 @@ const PROTO_PATH = resolve('proto/course_category.proto')
 
 async function client() {
     const packageDefinition = loadSync(
-        PROTO_PATH
+        PROTO_PATH,
+        {
+            keepCase: true,
+            longs: String,
+            enums: String,
+            defaults: true,
+            oneofs: true
+        }
     ) 
 
     const course_category: any = loadPackageDefinition(packageDefinition).courseCategory
@@ -17,9 +24,22 @@ async function client() {
         credentials.createInsecure()
     );
 
-    client.listCategory(null, function(err: any, response: any) {
+    client.createCategory(
+        {
+        name: "TESTE 1",
+        description: "DESC 1"
+        }, 
+        (err: any, response: any) => {
+            console.log(response);
+        }
+    );
+
+    client.listCategory({}, (err: any, response: any) => {
         console.log(response);
     });
+
+
+    
 }
 
 client();
