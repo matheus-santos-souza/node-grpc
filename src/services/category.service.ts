@@ -9,7 +9,6 @@ import { CategoryResponse__Output } from "proto/courseCategory/CategoryResponse"
 import { CategoryGetRequest } from "proto/courseCategory/CategoryGetRequest"
 import { CreateCategoryRequest } from "proto/courseCategory/CreateCategoryRequest"
 import { Category__Output } from "proto/courseCategory/Category"
-import { setTimeout } from "node:timers/promises"
 
 export class CategoryService {
     listCategory = async(
@@ -114,14 +113,12 @@ export class CategoryService {
             } 
             
         });
-        
 
         call.on('close', (data: any) => {
             console.log('close', data)
         })
 
         call.on('end', () => {
-            console.log('end', setId)
             const categories = [...setId].map(item => JSON.parse(item))
             const categoryList: CategoryList__Output = { 
                 categories: categories 
