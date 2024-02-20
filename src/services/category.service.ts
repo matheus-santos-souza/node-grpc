@@ -114,10 +114,6 @@ export class CategoryService {
             
         });
 
-        call.on('close', (data: any) => {
-            console.log('close', data)
-        })
-
         call.on('end', () => {
             const categories = [...setId].map(item => JSON.parse(item))
             const categoryList: CategoryList__Output = { 
