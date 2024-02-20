@@ -9,32 +9,32 @@ import { CategoryResponse__Output } from "proto/courseCategory/CategoryResponse"
 import { CategoryGetRequest } from "proto/courseCategory/CategoryGetRequest"
 import { CreateCategoryRequest } from "proto/courseCategory/CreateCategoryRequest"
 import { Category__Output } from "proto/courseCategory/Category"
+import { setTimeout } from "node:timers/promises"
 
-export default class CategoryService {
-
-    async listCategory(
+export class CategoryService {
+    listCategory = async(
         _: ServerUnaryCall<Blank, Blank>, 
         callback: sendUnaryData<CategoryList__Output>
-    ) {
+    ) => {
         try {
             const categories = await prisma.category.findMany()
             const categoryList: CategoryList__Output = {
                 categories
             }
-            callback(null, categoryList)
+            return callback(null, categoryList)
         } catch (error: any) {
             const err = validantionError(error)
-            callback(err);
+            return callback(err);
         }
     }
 
-    async createCategory(
+    createCategory = async(
         { request }: ServerUnaryCall<CreateCategoryRequest, CreateCategoryRequest>, 
         callback: sendUnaryData<CategoryResponse__Output>
-    ) {
+    ) => {
         const validantion = validationRequired(request)
         if (validantion.length) {
-            callback({ code: status.INVALID_ARGUMENT, details: `Required fields: [${validantion}]`});
+            return callback({ code: status.INVALID_ARGUMENT, details: `Required fields: [${validantion}]`});
         }
 
         try {
@@ -48,20 +48,20 @@ export default class CategoryService {
             const categoryResponse: CategoryResponse__Output = {
                 category
             }
-            callback(null, categoryResponse)
+            return callback(null, categoryResponse)
         } catch (error: any) {
             const err = validantionError(error)
-            callback(err);
+            return callback(err);
         }
     }
 
-    async getCategory(
+    getCategory = async(
         { request }: ServerUnaryCall<CategoryGetRequest, CategoryGetRequest>, 
         callback: sendUnaryData<CategoryResponse__Output>
-    ) {
+    ) => {
         const validantion = validationRequired(request)
         if (validantion.length) {
-            callback({ code: status.INVALID_ARGUMENT, details: `Required fields: [${validantion}]`});
+            return callback({ code: status.INVALID_ARGUMENT, details: `Required fields: [${validantion}]`});
         }
         
         try {
@@ -73,17 +73,17 @@ export default class CategoryService {
             const categoryResponse: CategoryResponse__Output = {
                 category
             }
-            callback(null, categoryResponse)
+            return callback(null, categoryResponse)
         } catch (error: any) {
             const err = validantionError(error)
-            callback(err);
+            return callback(err);
         }
     }
 
-    async createCategoryStream(
+    createCategoryStream = (
         call: ServerReadableStream<CreateCategoryRequest, CreateCategoryRequest>, 
         callback: sendUnaryData<CategoryList__Output>
-    ) {
+    ) => {
         const setId = new Set<string>()
         call.on('data', async (request: Category__Output) => {
             const validantion = validationRequired(request)
@@ -91,6 +91,7 @@ export default class CategoryService {
                 callback({ code: status.INVALID_ARGUMENT, details: `Required fields: [${validantion}]`});
             }
             try {
+                call.pause()
                 const category = await prisma.category.upsert({
                     where: {
                         name: request.name
@@ -104,31 +105,37 @@ export default class CategoryService {
                         description: request.description || ''
                     }
                 })
-                setId.add(category.id)
+                console.log(category)
+                setId.add(JSON.stringify(category))
+                call.resume()
             } catch (error) {
-                const err = validantionError(error)
+                const err = validantionError(error) 
                 callback(err);
-            }   
+            } 
+            
         });
-          
-        call.on('end', async () => {
-            const categories = await prisma.category.findMany({
-                where: {
-                    id: { in: [...setId] }
-                }
-            })
-            const categoryList: CategoryList__Output = { 
-                categories: categories
-            }
-            callback(null, categoryList);
-        });
+        
 
+        call.on('close', (data: any) => {
+            console.log('close', data)
+        })
+
+        call.on('end', () => {
+            console.log('end', setId)
+            const categories = [...setId].map(item => JSON.parse(item))
+            const categoryList: CategoryList__Output = { 
+                categories: categories 
+            }
+
+            callback(null, categoryList); 
+        });
     }
 
-    async createCategoryStreamBidirectional(
+    createCategoryStreamBidirectional = async(
         call: ServerDuplexStream<CreateCategoryRequest, CreateCategoryRequest>
-    ) {
+    ) => {
         call.on('data', async (request: Category__Output) => {
+            call.pause()
             const category = await prisma.category.upsert({
                 where: {
                     name: request.name
@@ -142,11 +149,12 @@ export default class CategoryService {
                     description: request.description
                 }
             })
+    
             call.write(category);
             call.resume();
         });
-          
-        call.on('end', async () => {
+
+        call.on('end', () => {
             call.end()
         });
     }
